@@ -29,6 +29,7 @@ VALUES
 
 
 -- 1/afficher tous les produits disponibles sur la carte
+-- Pourquoi ça m'affiche quelques serveurs?
 SELECT `description` FROM `produit`;
 -- 2/afficher les descriptions et prix unitaires des produits entre 4 et 5 euros inclus
 SELECT `description`,`PU` FROM `produit` WHERE `PU` >= 4 AND `PU`>= 5;
@@ -39,10 +40,21 @@ SELECT `numeroCommande`, `IDServeur`, DATE_FORMAT(`Dates`, "%D %b %Y") FROM `com
 -- 5/afficher le nombre de commandes par date.
 SELECT COUNT(*), `Dates` FROM `commande` GROUP BY `Dates`; 
 
-
 -- 6/afficher le prix moyen des produits de la carte quand ceux-ci valent plus de 5 €.
+SELECT AVG(`PU`) FROM `produit` WHERE `PU` >5;
 -- 7/afficher le nombre moyen de commandes par jour.
+-- pas réussi
+SELECT AVG(COUNT (*)), `Dates` FROM `commande` GROUP BY `Dates`
+
+SELECT AVG(nb)
+FROM (
+    SELECT COUNT(*) AS nb
+    FROM `commande`
+)     GROUP BY `Dates`
+
+
 -- 8/afficher les nom et prénom du serveur qui gère la table numéro 7
+SELECT `IDServeur`,`nom`,`prenom` FROM `serveur` JOIN `tables` ON `tables.IDServeur`=7;
 
 -- 9/afficher les produits de la commande numéro 5 : leurs description, quantité et prix respectifs.
 -- 10/en repartant de la question précédente, ajouter une colonne résultat qui contient le sous-total du prix par produit.
