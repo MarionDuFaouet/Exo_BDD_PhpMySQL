@@ -25,15 +25,20 @@ VALUES
 ('Dupont', 'Sebastien', 'sebastien@orange.fr'),
 ('Martin', 'Emilie', 'emilie@gmail.com');
 
+
+
+
 -- 1/afficher tous les produits disponibles sur la carte
 SELECT `description` FROM `produit`;
 -- 2/afficher les descriptions et prix unitaires des produits entre 4 et 5 euros inclus
 SELECT `description`,`PU` FROM `produit` WHERE `PU` >= 4 AND `PU`>= 5;
 -- 3/afficher les commandes datées du 13 mai 2022. 
-SELECT DATE_FORMAT("2022-05-13", "%D %b %Y"), `numeroCommande` FROM `commande` 
+SELECT DATE_FORMAT("2022-05-13", "%D %b %Y"), `numeroCommande` FROM `commande` WHERE `Dates` = "2022-05-13";
 -- 4/afficher les commandes (identifiant du serveur, date formatée, numéro de commande) rangées par serveur et par date.
-SELECT 
+SELECT `numeroCommande`, `IDServeur`, DATE_FORMAT(`Dates`, "%D %b %Y") FROM `commande` GROUP BY `IDServeur`, `Dates`; 
 -- 5/afficher le nombre de commandes par date.
+SELECT COUNT(*), `Dates` FROM `commande` GROUP BY `Dates`; 
+
 
 -- 6/afficher le prix moyen des produits de la carte quand ceux-ci valent plus de 5 €.
 -- 7/afficher le nombre moyen de commandes par jour.
