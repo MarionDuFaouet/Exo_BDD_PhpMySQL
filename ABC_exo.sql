@@ -1,3 +1,6 @@
+-- ma future convention d'écriture : les titres de tables en Capitalize et 
+-- nom de colonnes en camelCase 
+
 
 -- Mets à jour un prix 
 UPDATE `produit` SET `PU`= 2.20 WHERE `RefProduit`=1
@@ -29,37 +32,132 @@ VALUES
 
 
 -- 1/afficher tous les produits disponibles sur la carte
--- Pourquoi ça m'affiche quelques serveurs?
-SELECT `description` FROM `produit`;
+SELECT * FROM `produit`;
+
+
 -- 2/afficher les descriptions et prix unitaires des produits entre 4 et 5 euros inclus
-SELECT `description`,`PU` FROM `produit` WHERE `PU` >= 4 AND `PU`>= 5;
+SELECT `description`,`PU` FROM `produit` WHERE (`PU` >= 4 AND `PU`<= 5);
+
+
 -- 3/afficher les commandes datées du 13 mai 2022. 
-SELECT DATE_FORMAT("2022-05-13", "%D %b %Y"), `numeroCommande` FROM `commande` WHERE `Dates` = "2022-05-13";
+SELECT DATE_FORMAT(`Dates`, '%D %b %Y'), `numeroCommande` FROM `commande` WHERE `Dates` = '2022-05-13';
+
+
 -- 4/afficher les commandes (identifiant du serveur, date formatée, numéro de commande) rangées par serveur et par date.
-SELECT `numeroCommande`, `IDServeur`, DATE_FORMAT(`Dates`, "%D %b %Y") FROM `commande` GROUP BY `IDServeur`, `Dates`; 
+SELECT `numeroCommande`, `IDServeur`, DATE_FORMAT(`Dates`, "%D %b %Y") FROM `commande` ORDER BY `IDServeur`, `Dates`; 
+
+
 -- 5/afficher le nombre de commandes par date.
-SELECT COUNT(*), `Dates` FROM `commande` GROUP BY `Dates`; 
+SELECT COUNT(*) AS 'nbCommande', `Dates` FROM `commande` GROUP BY `Dates`; 
+
 
 -- 6/afficher le prix moyen des produits de la carte quand ceux-ci valent plus de 5 €.
-SELECT AVG(`PU`) FROM `produit` WHERE `PU` >5;
--- 7/afficher le nombre moyen de commandes par jour.
--- pas réussi
-SELECT AVG(COUNT (*)), `Dates` FROM `commande` GROUP BY `Dates`
+SELECT FORMAT(AVG(`PU`),2) AS 'avgPrice' FROM `produit` AS p WHERE p.`PU`<5;
 
-SELECT AVG(nb)
-FROM (
-    SELECT COUNT(*) AS nb
-    FROM `commande`
-)     GROUP BY `Dates`
+
+-- 7/afficher le nombre moyen de commandes par jour.
+-- imbrication de méthode
+-- nb il faut un renommage à la fin (AS grouped)
+-- correction Thierry
+SELECT AVG(nbCmdPerDate) AS 'Nb moyen commande par date'
+FROM(
+    SELECT COUNT(*) AS nbCmdPerDate
+    FROM `Commande`GROUP BY `Dates`
+) AS grouped;
 
 
 -- 8/afficher les nom et prénom du serveur qui gère la table numéro 7
-SELECT `IDServeur`,`nom`,`prenom` FROM `serveur` JOIN `tables` ON `tables.IDServeur`=7;
+-- 8/correction Thierry
+SELECT `serveur`.`prenom`,`serveur`.`nom` 
+FROM `serveur` 
+JOIN `tables` 
+ON `tables`.`IDServeur`=`serveur`.`IDServeur` 
+WHERE `Table`.`numTable`=7;
+-- 8/ou, si les clés primaires et secondaires ont le même nom (cas le plus courant)
+SELECT `Serveur`.`prenom`,`Serveur`.`nom` 
+FROM `Serveur` 
+JOIN `Table` 
+USING (`IDServeur`) 
+WHERE `Table`.`numTable`=7;
+
 
 -- 9/afficher les produits de la commande numéro 5 : leurs description, quantité et prix respectifs.
--- 10/en repartant de la question précédente, ajouter une colonne résultat qui contient le sous-total du prix par produit.
+-- je peux afficher des colonnes venant de plusieurs tables
+SELECT `produit`.`Description`, `contenir`.`quantite`, `produit`.`PU`
+-- je veux afficher les produits
+FROM `produit`
+-- je joins à la table contenir
+JOIN `contenir`
+-- ces deux tables ont en commun refProduit
+USING (`refProduit`)
+-- je vise là où le numero de commande, dans la table contenir, estt égal à 5
+WHERE `contenir`.`numeroCommande` = 5;
+
+
+-- 10/afficher les produits de la commande numéro 5 : leurs description, quantité et prix respectifs.
+-- ajouter une colonne résultat qui contient le sous-total du prix par produit.
+SELECT `produit`.`Description`, `contenir`.`quantite`, `produit`.`PU`,
+SUM(`contenir`.`quantite` * `produit`.`PU`) AS 'sous-total'
+FROM `produit`
+JOIN `contenir` 
+USING (`refProduit`)
+WHERE `contenir`.`numeroCommande`=5
+GROUP BY `produit`.`refProduit`;
+
+
 -- 11/en repartant de la question précédente, trouver le montant total de la commande 5.
+-- je peux afficher une colonne et un SUM
+SELECT `numeroCommande`, SUM(`contenir`.`quantite` * `produit`.`PU`)
+FROM `produit`
+JOIN `contenir` USING (`refProduit`) 
+WHERE `contenir`.`numeroCommande`=5; 
+
+
 -- 12/trouver le chiffre d'affaire dégagé par chaque serveur (son identifiant)
+SELECT `IDServeur`, SUM(`contenir`.`quantite` * `produit`.`PU`) 
+FROM `produit` 
+JOIN `contenir` USING (`refProduit`) 
+JOIN `commande` USING (`numeroCommande`) 
+GROUP BY `IDServeur`; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- BONUS ++---------------------------------------------------------------------------
+
+
 -- 13/en repartant de la question précédente, remplacer l'identifiant du serveur par son prénom/nom.
+SELECT `serveur`.`prenom`, `serveur`.`nom`, SUM(`contenir`.`quantite` * `produit`.`PU`)
+FROM `serveur`, `Produit`
+JOIN `contenir` USING (`refProduit`)
+JOIN `commande` USING (`numeroCommande`)
+WHERE `serveur`.`IDServeur`= `commande`.`IDServeur`
+GROUP BY `commande`.`IDServeur`;
+
 -- 14/affichage des produits du plus vendu au moins vendu (en terme de quantité).
+FROM `contenir`
+INNER JOIN `produit` ON `contenir`.`refProduit` = `produit`.`refProduit`
+GROUP BY `produit`.`refProduit`
+ORDER BY topProduct DESC LIMIT 25;
+
 -- 15/trouver le chiffre d'affaires par table
+SELECT `table`.`numeroTable`, SUM(`contenir`.`quantite` * `produit`.`PU`) AS`CA`
+FROM `table`, `produit`
+JOIN `contenir` USING (`refProduit`)
+JOIN `commande` USING (`numeroCommande`)
+WHERE `commande`.`numeroTable`= `table`.`numeroTable`
+GROUP BY `commande`.`numeroTable`
+ORDER BY `CA`;
