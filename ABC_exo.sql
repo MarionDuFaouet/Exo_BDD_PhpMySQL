@@ -76,8 +76,7 @@ WHERE `Table`.`numTable`=7;
 -- 8/ou, si les clés primaires et secondaires ont le même nom (cas le plus courant)
 SELECT `Serveur`.`prenom`,`Serveur`.`nom` 
 FROM `Serveur` 
-JOIN `Table` 
-USING (`IDServeur`) 
+JOIN `Table` USING (`IDServeur`) 
 WHERE `Table`.`numTable`=7;
 
 
@@ -86,27 +85,23 @@ WHERE `Table`.`numTable`=7;
 SELECT `produit`.`Description`, `contenir`.`quantite`, `produit`.`PU`
 -- je veux afficher les produits
 FROM `produit`
--- je joins à la table contenir
-JOIN `contenir`
--- ces deux tables ont en commun refProduit
-USING (`refProduit`)
--- je vise là où le numero de commande, dans la table contenir, estt égal à 5
+-- je joins à la table contenir, ces deux tables ont en commun la clé refProduit
+JOIN `contenir` USING (`refProduit`)
+-- je vise là où le numero de commande, dans la table contenir, est égal à 5
 WHERE `contenir`.`numeroCommande` = 5;
 
 
 -- 10/afficher les produits de la commande numéro 5 : leurs description, quantité et prix respectifs.
 -- ajouter une colonne résultat qui contient le sous-total du prix par produit.
-SELECT `produit`.`Description`, `contenir`.`quantite`, `produit`.`PU`,
-SUM(`contenir`.`quantite` * `produit`.`PU`) AS 'sous-total'
+-- je peux ajouter un SUM dans mon SELECT
+SELECT `produit`.`Description`, `contenir`.`quantite`, `produit`.`PU`, SUM(`contenir`.`quantite` * `produit`.`PU`) AS 'sous-total'
 FROM `produit`
-JOIN `contenir` 
-USING (`refProduit`)
+JOIN `contenir` USING (`refProduit`)
 WHERE `contenir`.`numeroCommande`=5
 GROUP BY `produit`.`refProduit`;
 
 
 -- 11/en repartant de la question précédente, trouver le montant total de la commande 5.
--- je peux afficher une colonne et un SUM
 SELECT `numeroCommande`, SUM(`contenir`.`quantite` * `produit`.`PU`)
 FROM `produit`
 JOIN `contenir` USING (`refProduit`) 
@@ -115,7 +110,7 @@ WHERE `contenir`.`numeroCommande`=5;
 
 -- 12/trouver le chiffre d'affaire dégagé par chaque serveur (son identifiant)
 SELECT `IDServeur`, SUM(`contenir`.`quantite` * `produit`.`PU`) 
-FROM `produit` 
+FROM `produit`
 JOIN `contenir` USING (`refProduit`) 
 JOIN `commande` USING (`numeroCommande`) 
 GROUP BY `IDServeur`; 
